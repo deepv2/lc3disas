@@ -11,6 +11,10 @@ uint16_t *saveBinData(char *path, uint32_t size); // Makes an array for each byt
 
 int8_t *getBinaryInstruction(uint16_t *binData, int i); // Loads binary instruction at index i into integer array 
 
-void printInstruction(uint16_t *binData, int i); // Prints binary instruction at index i
+void printHexInstruction(uint16_t *binData, int i); // Prints hex instruction at index i
+
+void printBinaryInstruction(uint16_t *binData, int i); // Prints binary instruction at index i
+
+void le16_to_be16(uint16_t *binData_one_inst); // Switches little endian to big endian on one instruction in binData
 
 #endif

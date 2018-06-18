@@ -12,8 +12,10 @@ int main(int argc, char *argv[]) {
 
 		uint16_t *data = saveBinData(argv[1], size);
 		int i;
-		for(i = 0; i < size / 2; i++) 
-			printInstruction(data, i);
+		for(i = 0; i < size / 2; i++) {
+			printHexInstruction(data, i);
+			printBinaryInstruction(data, i);
+		}
 		return 0;
 	}
 }
