@@ -1,47 +1,36 @@
 #include "disas.h"
 
-uint8_t *saveBinData(char *path) {
+uint16_t *saveBinData(char *path, uint32_t size) {
 	FILE *bin = fopen(path, "rb");
-	uint32_t size;
-	int i;
+	uint16_t *binData = malloc((size / 2) * sizeof(uint16_t));
 
-	// POSIX compliant way of geting size of file	
-	struct stat st;
-	stat(path, &st);
-	size = st.st_size;
+	if(fread(binData, 2, size, bin) != size / 2)
+		return NULL;
+	// If data was unable to be read 16 bytes each, return NULL
 
-	uint8_t *binData = malloc(size * sizeof(uint8_t));
-
-	for(i = 0; i < size; i++) {
-		binData[i] = fgetc(bin);
-	}
+	// TODO: Switch endianness
 	fclose(bin); 
 	return binData;
 }
 
-char *getBinaryInstruction(uint8_t *binData, int i) {
-	char *inst = malloc(16 * sizeof(char));
-	uint8_t msb15_8 = binData[i];
-	uint8_t lsb7_0 = binData[i + 1];
+int8_t *getBinaryInstruction(uint16_t *binData, int i) {
+	int8_t *inst = malloc(17 * sizeof(char));
+	uint16_t data = binData[i];
 	int j;
-	for(j = 7; j >= 0; j--) {
-		if(msb15_8 & 0x01) // if lsb in selected partition is 1
-			inst[j] = '1';
+	inst[0] = i; // embed number of instruction in binary instruction
+	for(j = 16; j >= 1; j--) {
+		if(data & 0x0001) // if lsb in selected partition is 1
+			inst[j] = 1;
 		else
-			inst[j] = '0';
-		msb15_8 = msb15_8 >> 1; // right shift one to iterate all 8 bits
-	}
-	// repeat for lsb 8 bits
-	for(j = 15; j >= 8; j--) {
-		if(lsb7_0 & 0x01)
-			inst[j] = '1';
-		else
-			inst[j] = '0';
-		lsb7_0 = lsb7_0 >> 1;
+			inst[j] = 0;
+		data = data >> 1; // right shift one to iterate all 8 bits
 	}
 	return inst;
 }
 
-void dumpInstructions(uint8_t *binData) {
-	//int8_t binaryBuffer[16];
+void printInstruction(uint16_t *binData, int i) {
+	printf("%d: ", i); // print index of instruction
+	int j;
+		printf("%04x", binData[i]);
+	printf("\n");
 }

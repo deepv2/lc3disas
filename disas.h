@@ -6,10 +6,11 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-uint8_t *saveBinData(char *path); // Makes an array for each byte of data in the object file.
+uint16_t *saveBinData(char *path, uint32_t size); // Makes an array for each byte of data in the object file.
+// size is the size of the file in bytes
 
-char *getBinaryInstruction(uint8_t *binData, int i); // Loads binary instruction at index i and i + 1 into string
+int8_t *getBinaryInstruction(uint16_t *binData, int i); // Loads binary instruction at index i into integer array 
 
-void dumpInstructions(uint8_t *binData); // Prints each instruction to the console
+void printInstruction(uint16_t *binData, int i); // Prints binary instruction at index i
 
 #endif

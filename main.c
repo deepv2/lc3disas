@@ -5,13 +5,15 @@ int main(int argc, char *argv[]) {
 		printf("Format: lc3disas [FILE PATH]. Supports one file per program launch.\n");
 		return 1;
 	} else {
-		uint8_t *data = saveBinData(argv[1]);
+		// POSIX compliant way of geting size of file	
+		struct stat st;
+		stat(argv[1], &st);
+		uint32_t size = st.st_size;
+
+		uint16_t *data = saveBinData(argv[1], size);
 		int i;
-		for(i = 0; i < 8; i += 2) {
-			char *test = getBinaryInstruction(data, i);
-			printf("%d: %s\n", i / 2, test);
-			free(test);
-		}
-		printf("\n");
+		for(i = 0; i < size / 2; i++) 
+			printInstruction(data, i);
+		return 0;
 	}
 }
