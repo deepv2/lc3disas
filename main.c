@@ -11,10 +11,14 @@ int main(int argc, char *argv[]) {
 		uint32_t size = st.st_size;
 
 		uint16_t *data = saveBinData(argv[1], size);
-		int i;
-		for(i = 0; i < size / 2; i++) {
+
+		for(int i = 0; i < size / 2; i++) {
+			printf("%d: ", i + 1);
 			printHexInstruction(data, i);
+			printf("%d: ", i + 1);
 			printBinaryInstruction(data, i);
+			printf("%d: ", i + 1);
+			printAssemblyInstruction(data, i);			
 		}
 		return 0;
 	}

@@ -1,2 +1,2 @@
 all:
-	gcc -g -Wall main.c disas.c -o lc3disas
+	gcc -g -Wall -pedantic -std=c99 main.c disas.c -o lc3disas
