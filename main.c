@@ -14,12 +14,9 @@ int main(int argc, char *argv[]) {
 
 		for(int i = 0; i < size / 2; i++) {
 			printf("%d: ", i + 1);
-			printHexInstruction(data, i);
-			printf("%d: ", i + 1);
-			printBinaryInstruction(data, i);
-			printf("%d: ", i + 1);
 			printAssemblyInstruction(data, i);			
 		}
+		free(data);
 		return 0;
 	}
 }

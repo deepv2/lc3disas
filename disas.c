@@ -53,6 +53,11 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 	uint8_t DR, SR1, SR2, BaseR; 	// Destination Register, Source Register 1 and 2, BaseR for LD/ST operations (R1-R7)
 	int8_t offset; 			// Offset for ADD/AND/STR/LDR
 	int16_t PCoffset; 		// PC Offset for LD/ST operations, LEA, JSR, BR
+	if(i == 0) { 	// Support for .ORIG at the start of the program
+		printf(".ORIG x%04X\n", instruction);
+		free(numberData);
+		return;
+	}
 	switch(instruction & 0xF000)	// Find which opcode is present
 	{
 	case(0x1000): // ADD
@@ -108,7 +113,10 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		break;
 	case(0xC000): // JMP
 		BaseR = 4 * numberData[7] + 2 * numberData[8] + numberData[9];
-		printf("JMP R%d\n", BaseR);
+		if(BaseR == 7) // Support for RET (JMP R7)
+			printf("RET\n");
+		else
+			printf("JMP R%d\n", BaseR);
 		break;
 	case(0x4000): // JSR
 		if(numberData[4]) { // if 1, JSR with PCoffset
@@ -125,11 +133,30 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		}
 		break;
 	case(0xF000): // TRAP
-		instruction &= 0x00FF; // print out trap vector (8-bits) only
-		printf("TRAP x%x\n", instruction);
-
-		// TO-DO: Implement look-up of what trap instruction is given (PUTS, HALT, GETC, etc).
-
+		instruction &= 0x00FF; // get trap vector (8-bits) only
+		switch(instruction) {
+			case(0x0020):
+				printf("GETC\n");
+				break;
+			case(0x0021):
+				printf("OUT\n");
+				break;
+			case(0x0022):
+				printf("PUTS\n");
+				break;
+			case(0x0023):
+				printf("IN\n");
+				break;
+			case(0x0024):
+				printf("PUTSP\n");
+				break;
+			case(0x0025):
+				printf("HALT\n");
+				break;
+			default:
+				printf("UNDEFINED TRAP\n");
+				break;
+		}		
 		break;
 	case(0x2000): // LD
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
