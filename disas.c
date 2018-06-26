@@ -55,15 +55,28 @@ void printAssemblyInstruction(uint16_t *binData, int i, symbolList_t *symbols) {
 	int8_t offset; 			// Offset for ADD/AND/STR/LDR
 	int16_t PCoffset; 		// PC Offset for LD/ST operations, LEA, JSR, BR
 
-	char *label;
-	if((label = findLabel(binData[0] + i - 1, symbols)) != NULL) printf("%s ", label);
-	// prints label in front of instruction if it applies
 
 	if(i == 0) { 	// Support for .ORIG at the start of the program
 		printf(".ORIG x%04X\n", instruction);
 		free(numberData);
 		return;
 	}
+
+	char *label;
+	if((label = findLabel(binData[0] + i - 1, symbols)) != NULL) printf("%s ", label);
+	// prints label in front of instruction if it applies
+
+	// Moderate support for finding assembler directives based on common traits
+	if((instruction & 0xFF00) == 0)  {
+		/* if data was only in lower bytes, most likely an ASCII character or number.
+		but, since there is no way to know which one it is, we will assume it is an
+		ASCII character, since numbers can be put into registers with ADD anyways.
+		*/
+		printf(".FILL '%c'\n", instruction);
+		free(numberData);
+		return;
+	}
+
 	switch(instruction & 0xF000)	// Find which opcode is present
 	{
 	case(0x1000): // ADD
@@ -309,7 +322,7 @@ void printAssemblyInstruction(uint16_t *binData, int i, symbolList_t *symbols) {
 		printf("STR R%d, R%d, #%d\n", SR1, BaseR, offset);
 		break;
 	default:
-		printf("NO OP\n");
+		printf("NOP\n");
 		break;
 	}
 	free(numberData);

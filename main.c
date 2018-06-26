@@ -65,3 +65,12 @@ int printError() {
 		printf(".sym file is optional. Labels will not be shown if .sym file not provided.\n");
 		return 1;
 }
+/*
+	if(i == 0) { 	// Support for .ORIG at the start of the program
+		printf(".ORIG x%04X\n", instruction);
+		free(numberData);
+		return;
+	} else {	// Support for memory indices before each instruction if not .ORIG instruction
+		printf("0x%04X: ", binData[0] + i - 1);
+	}
+*/
