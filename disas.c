@@ -47,13 +47,18 @@ void le16_to_be16(uint16_t *binData_one_inst) {
 	*binData_one_inst = right_half + left_half;
 }
 	
-void printAssemblyInstruction(uint16_t *binData, int i) {
+void printAssemblyInstruction(uint16_t *binData, int i, symbolList_t *symbols) {
 	int8_t *numberData = getBinaryInstruction(binData, i);
 	uint16_t instruction = binData[i];
 
 	uint8_t DR, SR1, SR2, BaseR; 	// Destination Register, Source Register 1 and 2, BaseR for LD/ST operations (R1-R7)
 	int8_t offset; 			// Offset for ADD/AND/STR/LDR
 	int16_t PCoffset; 		// PC Offset for LD/ST operations, LEA, JSR, BR
+
+	char *label;
+	if((label = findLabel(binData[0] + i - 1, symbols)) != NULL) printf("%s ", label);
+	// prints label in front of instruction if it applies
+
 	if(i == 0) { 	// Support for .ORIG at the start of the program
 		printf(".ORIG x%04X\n", instruction);
 		free(numberData);
@@ -104,13 +109,23 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 			printf("z");	
 		if(numberData[6])
 			printf("p");
-		if(numberData[7]) { // if MSB is 1 (negative offset)
+
+		if(numberData[7]) // if MSB is 1 (negative offset)
 			PCoffset = instruction | 0xFE00;
-			printf(" PC%d\n", PCoffset);
-		} else { // if MSB is 0 (positive offset)
+		else 		  // if MSB is 0 (positive offset)
 			PCoffset = instruction & 0x01FF;
-			printf(" PC+%d\n", PCoffset);
+		
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {					
+			// if symbols exist, see if one is given for our instruction and print that
+			printf(" %s\n", label);
 		}
+		// if no label, print out manual PCoffset
+		else if(PCoffset < 0)
+			printf(" PC%d\n", PCoffset);
+		else if(PCoffset == 0)
+			printf(" PC\n");
+		else
+			printf(" PC+%d\n", PCoffset);
 		break;
 	case(0xC000): // JMP
 		BaseR = 4 * numberData[7] + 2 * numberData[8] + numberData[9];
@@ -121,13 +136,24 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		break;
 	case(0x4000): // JSR
 		if(numberData[4]) { // if 1, JSR with PCoffset
-			if(numberData[5]) { // if PCoffset is negative, sign extend negative sign
+			if(numberData[5]) // if PCoffset is negative, sign extend negative sign
 				PCoffset = instruction | 0xF000;
-				printf("JSR PC%d\n", PCoffset);
-			} else { // else if positive, sign extend positive sign
-				PCoffset = instruction & 0x0FFF;
-				printf("JSR PC+%d\n", PCoffset);
+			else // else if positive, sign extend positive sign
+				PCoffset = instruction & 0x07FF;
+
+			if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+			// if symbols exist, see if one is given for our instruction and print that
+				printf("JSR ");
+				printf("%s\n", label);
 			}
+			// if no label, print out manual PCoffset
+
+			else if(PCoffset < 0)
+				printf("JSR PC%d\n", PCoffset);
+			else if(PCoffset == 0)
+				printf("JSR PC\n");
+			else
+				printf("JSR PC+%d\n", PCoffset);
 		} else { // if 0, JSRR with register
 			BaseR = 4 * numberData[7] + 2 * numberData[8] + numberData[9];
 			printf("JSRR R%d\n", BaseR);	
@@ -161,23 +187,43 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		break;
 	case(0x2000): // LD
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
-		if(numberData[7]) { // if negative
+		if(numberData[7]) // if negative
 			PCoffset = instruction | 0xFF00;
-			printf("LD R%d, PC%d\n", DR, PCoffset);
-		} else {
+		else
 			PCoffset = instruction & 0x00FF;
-			printf("LD R%d, PC+%d\n", DR, PCoffset);
+
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+		// if symbols exist, see if one is given for our instruction and print that
+			printf("LD R%d, %s\n", DR, label);
 		}
+		// if no label, print out manual PCoffset
+		else if(PCoffset < 0)
+			printf("LD R%d, PC%d\n", DR, PCoffset);
+		else if(PCoffset == 0)
+			printf("LD R%d, PC\n", DR);
+		else
+			printf("LD R%d, PC+%d\n", DR, PCoffset);
 		break;
 	case(0xA000): // LDI
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
-		if(numberData[7]) { // if negative
+		if(numberData[7]) // if negative
 			PCoffset = instruction | 0xFF00;
-			printf("LDI R%d, PC%d\n", DR, PCoffset);
-		} else {
+		else
 			PCoffset = instruction & 0x00FF;
-			printf("LDI R%d, PC+%d\n", DR, PCoffset);
+
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+		// if symbols exist, see if one is given for our instruction and print that
+			printf("LDI R%d, %s\n", DR, label);
 		}
+		// if no label, print out manual PCoffset
+
+
+		else if(PCoffset < 0)
+			printf("LDI R%d, PC%d\n", DR, PCoffset);
+		else if(PCoffset == 0)
+			printf("LDI R%d, PC\n", DR);
+		else
+			printf("LDI R%d, PC+%d\n", DR, PCoffset);
 		break;
 	case(0x6000): // LDR
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
@@ -190,13 +236,23 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		break;
 	case(0xE000): // LEA
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
-		if(numberData[7]) { // negative check
+		if(numberData[7]) // if negative
 			PCoffset = instruction | 0xFF00;
-			printf("LEA R%d, PC%d\n", DR, PCoffset);
-		} else {
+		else
 			PCoffset = instruction & 0x00FF;
-			printf("LEA R%d, PC+%d\n", DR, PCoffset);
+
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+			// if symbols exist, see if one is given for our instruction and print that
+			printf("LEA R%d, %s\n", DR, label);
 		}
+		// if no label, print out manual PCoffset
+
+		else if(PCoffset < 0)
+			printf("LEA R%d, PC%d\n", DR, PCoffset);
+		else if(PCoffset == 0)
+			printf("LEA R%d, PC\n", DR);
+		else
+			printf("LEA R%d, PC+%d\n", DR, PCoffset);
 		break;
 	case(0x9000): // NOT
 		DR = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
@@ -205,23 +261,43 @@ void printAssemblyInstruction(uint16_t *binData, int i) {
 		break;
 	case(0x3000): // ST
 		SR1 = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
-		if(numberData[7]) { // if negative
+		if(numberData[7]) // if negative
 			PCoffset = instruction | 0xFF00;
-			printf("ST R%d, PC%d\n", SR1, PCoffset);
-		} else {
+		else
 			PCoffset = instruction & 0x00FF;
-			printf("ST R%d, PC+%d\n", SR1, PCoffset);
+
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+			// if symbols exist, see if one is given for our instruction and print that
+			printf("ST R%d, %s\n", SR1, label);
 		}
+		// if no label, print out manual PCoffset
+
+		else if(PCoffset < 0)
+			printf("ST R%d, PC%d\n", SR1, PCoffset);
+		else if(PCoffset == 0)
+			printf("ST R%d, PC\n", SR1);
+		else
+			printf("ST R%d, PC+%d\n", SR1, PCoffset);
 		break;
 	case(0xB000): // STI
 		SR1 = 4 * numberData[4] + 2 * numberData[5] + numberData[6];
-		if(numberData[7]) { // if negative
+		if(numberData[7]) // if negative
 			PCoffset = instruction | 0xFF00;
-			printf("STI R%d, PC%d\n", SR1, PCoffset);
-		} else {
+		else
 			PCoffset = instruction & 0x00FF;
-			printf("STI R%d, PC+%d\n", SR1, PCoffset);
+
+		if((label = findLabel(binData[0] + i + PCoffset, symbols)) != NULL) {
+			// if symbols exist, see if one is given for our instruction and print that
+			printf("STI R%d, %s\n", SR1, label);
 		}
+		// if no label, print out manual PCoffset
+
+		else if(PCoffset < 0)
+			printf("STI R%d, PC%d\n", SR1, PCoffset);
+		else if(PCoffset == 0)
+			printf("STI R%d, PC\n", SR1);
+		else
+			printf("STI R%d, PC+%d\n", SR1, PCoffset);
 		break;
 	case(0x7000): // STR
 		SR1 = 4 * numberData[4] + 2 * numberData[5] + numberData[6];

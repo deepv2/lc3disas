@@ -41,3 +41,9 @@ void deallocateSymbols(symbolList_t *head) {
 		prev = head;
 	}
 }
+char *findLabel(uint16_t address, symbolList_t *symbols) {
+	if(symbols == NULL) return NULL; // base case
+	else if(symbols->addr == address) return symbols->label;
+	else if(symbols->addr > address) return NULL; // optimization since symbolList is read in increasing address order
+	else return findLabel(address, symbols->next);
+}

@@ -14,5 +14,6 @@ typedef struct symbolList {
 
 symbolList_t *readSymbols(const char *path); // gets symbols and addresses and puts into linked list
 void deallocateSymbols(symbolList_t *head); // deallocates all values in the symbolList
+char *findLabel(uint16_t address, symbolList_t *symbols); // finds label associated with address given, returns NULL if not found
 
 #endif
