@@ -29,7 +29,7 @@ int8_t *getBinaryInstruction(uint16_t *binData, int i) {
 }
 
 void printHexInstruction(uint16_t *binData, int i) {
-	printf("%04x\n", binData[i]);
+	printf("0x%04x\n", binData[i]);
 }
 void printBinaryInstruction(uint16_t *binData, int i) {
 	int8_t *inst = getBinaryInstruction(binData, i);

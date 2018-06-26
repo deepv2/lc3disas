@@ -1,10 +1,41 @@
 # LC3 Disassembler
 
-This is a basic work-in-progress disassembler for LC3 assembly.
-This program takes an assembled binary file (usually .obj) and scans the data to print out all the instructions present in the LC3 assembly language.
+#### Introduction 
 
-There is no support for adding symbols yet; this will come at a later point in time.
-The assembly instructions print successfully, and by modifying main.c, you can choose whether to print the instructions in hexidecimal, binary, or in LC3 assembly.
+This is a basic disassembler for LC3 assembly with support for symbols.
+This program takes an assembled binary file and can print out the instructions in:
+* Hexadecimal notation
+* Binary notation
+* Assembly with symbols OR without symbols
+  * Offsets are given as a offset from the current PC value if no symbols are provided.
+
+Usage: lc3disas [OPTION] [.obj file path] [.sym file path (optional)]
+       -h, --hex               Prints out instructions in hexadecimal format (like a hex dump).
+       -b, --bin               Prints out instructions in binary format.
+       -a, --asm               Prints out instructions in assembly format.
+
+#### Installation
+
+This program was built on Ubuntu 18.04 with GCC 7.3.0. It should work on Mac OS, though I have no way to test this.
+For Windows users, I strongly recommend you use the Windows Subsystem for Linux and install Ubuntu from the Windows Store.
+
+For dependencies, all you really need is a C99 compliant compiler (GCC or clang will work).
+To compile the file, either use Make or compile the source files manually (shown in the Makefile).
+Ubuntu:
+```
+sudo apt install make gcc git build-essential
+```
+For Mac OS, install the Xcode command line tools for Make.
+Then, install the program:
+```
+make
+sudo make install
+```
+By default this installs to /usr/local/bin. If you want to remove the program, type
+```
+sudo make uninstall
+```
+Or if you want this program system-wide, copy the executable to /usr/bin.
 
 Feel free to improve the code I've written here; this was done as a little project on the side for fun.
 
