@@ -1,7 +1,8 @@
 #include "disas.h"
 
-uint16_t *saveBinData(char *path, uint32_t size) {
+uint16_t *saveBinData(const char *path, uint32_t size) {
 	FILE *bin = fopen(path, "rb");
+	if(bin == NULL) return NULL; // if file cannot be opened, return NULL
 	uint16_t *binData = malloc((size / 2) * sizeof(uint16_t));
 
 	if(fread(binData, 2, size, bin) != size / 2)
