@@ -1,3 +1,22 @@
+/* 
+ * disas.c: source code for disassembly of binary 
+ *
+ * Copyright (C) 2018 Deepan Venkatesh
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "disas.h"
 
 uint16_t *saveBinData(const char *path, uint64_t size) {
@@ -69,9 +88,9 @@ void printAssemblyInstruction(uint16_t *binData, int i, symbolList_t *symbols) {
 	// Moderate support for finding assembler directives based on common traits
 	if((instruction & 0xFF00) == 0)  {
 		/* if data was only in lower bytes, most likely an ASCII character or number.
-		but, since there is no way to know which one it is, we will assume it is an
-		ASCII character, since numbers can be put into registers with ADD anyways.
-		*/
+		 * but, since there is no way to know which one it is, we will assume it is an
+		 * ASCII character, since numbers can be put into registers with ADD anyways.
+		 */
 		printf(".FILL '%c'\n", instruction);
 		free(numberData);
 		return;
