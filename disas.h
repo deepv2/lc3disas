@@ -12,7 +12,7 @@
 
 #include "symbols.h"
 
-uint16_t *saveBinData(const char *path, uint32_t size); // Makes an array for each byte of data in the object file.
+uint16_t *saveBinData(const char *path, uint64_t size); // Makes an array for each byte of data in the object file.
 // size is the size of the file in bytes
 int8_t *getBinaryInstruction(uint16_t *binData, int i); // Loads binary instruction at index i into integer array 
 void printHexInstruction(uint16_t *binData, int i); // Prints hex instruction at index i

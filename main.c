@@ -9,42 +9,83 @@ int main(int argc, char *argv[]) {
 
 		unsigned int length = strlen(argv[2]);
 		char *obj = argv[2];
-		if(obj[length - 3] != 'o' || obj[length - 2] != 'b' || obj[length - 1] != 'j') return printError();
+		if(obj[length - 3] != 'o' || obj[length - 2] != 'b' || obj[length - 1] != 'j') {
+			printf("error: first file given is not a .obj file\n");
+			return printError();
+		}
 
 		// check if [.sym file path] is actually a .sym file if one is provided
-
 		if(argc == 4) {
 			unsigned int length = strlen(argv[3]);
 			char *obj = argv[3];
-			if(obj[length - 3] != 's' || obj[length - 2] != 'y' || obj[length - 1] != 'm') return printError();
+			if(obj[length - 3] != 's' || obj[length - 2] != 'y' || obj[length - 1] != 'm') {
+				printf("error: second file given is not a .sym file\n");
+				return printError();
+			}
 		}
 
 		// getting size of .obj file	
 		struct stat st;
 		stat(argv[2], &st);
-		uint32_t size = st.st_size;
+		if(st.st_size == 0) { // check if size is 0 bytes (file does not exist)
+			printf("error: cannot get size of .obj file\n");
+			return printError();
+		}
 
-		uint16_t *data = saveBinData(argv[2], size);
+		uint16_t *data = saveBinData(argv[2], st.st_size);
+		if(data == NULL) { // check if file cannot be opened
+			printf("error: cannot open .obj file\n");
+			return printError();
+		}
+
 		symbolList_t *symbols;
-		if(argc == 4) symbols = readSymbols(argv[3]);
+		if(argc == 4) {
+			 symbols = readSymbols(argv[3]);
+			 if(symbols == NULL) {
+				 printf("error: cannot open .sym file\n");
+				 return printError();
+			 }
+		}
 		else symbols = NULL;
 		if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--hex")) {
-			for(int i = 0; i < size / 2; i++) {
+			for(int i = 0; i < st.st_size / 2; i++) {
 				printHexInstruction(data, i);
 			}
 		}
 		else if(!strcmp(argv[1], "-b") || !strcmp(argv[1], "--bin")) {
-			for(int i = 0; i < size / 2; i++) {
+			for(int i = 0; i < st.st_size / 2; i++) {
 				printBinaryInstruction(data, i);
 			}
 		}
 		else if(!strcmp(argv[1], "-a") || !strcmp(argv[1], "--asm")) {
-			for(int i = 0; i < size / 2; i++) {
+			for(int i = 0; i < st.st_size / 2; i++) {
 				printAssemblyInstruction(data, i, symbols);	
 			}
 			printf(".END\n");
 		} 
+		else if(!strcmp(argv[1], "-hi") || !strcmp(argv[1], "--hex-indexed")) {
+			for(int i = 0; i < st.st_size / 2; i++) {
+				if(i != 0) printf("0x%04X: ", data[0] + i - 1);
+				else printf("(.ORIG) ");
+				printHexInstruction(data, i);
+			}
+		}
+		else if(!strcmp(argv[1], "-bi") || !strcmp(argv[1], "--bin-indexed")) {
+			for(int i = 0; i < st.st_size / 2; i++) {
+				if(i != 0) printf("0x%04X: ", data[0] + i - 1);
+				else printf("(.ORIG) ");
+				printBinaryInstruction(data, i);
+			}
+		}
+		else if(!strcmp(argv[1], "-ai") || !strcmp(argv[1], "--asm-indexed")) {
+			for(int i = 0; i < st.st_size / 2; i++) {
+				if(i != 0) printf("0x%04X: ", data[0] + i - 1);
+				printAssemblyInstruction(data, i, symbols);	
+			}
+			printf(".END\n");
+		}
 		else {
+			printf("error: option not recognized\n");
 			free(data);
 			deallocateSymbols(symbols);
 			return printError();
@@ -53,6 +94,7 @@ int main(int argc, char *argv[]) {
 		deallocateSymbols(symbols);
 		return 0;
 	} else {
+		printf("error: too many or too little arguments given\n");
 		return printError();
 	}
 }
@@ -62,15 +104,9 @@ int printError() {
 		printf("-h, --hex		Prints out instructions in hexadecimal format.\n");
 		printf("-b, --bin		Prints out instructions in binary format.\n");
 		printf("-a, --asm		Prints out instructions in assembly format.\n");
-		printf(".sym file is optional. Labels will not be shown if .sym file not provided.\n");
+		printf("-hi, --hex-indexed	Prints out instructions in hexadecimal format with memory indices.\n");
+		printf("-bi, --bin-indexed	Prints out instructions in binary format with memory indices.\n");
+		printf("-ai, --asm-indexed	Prints out instructions in assembly format with memory indices.\n");
+		printf(".sym file is optional. Labels will not be shown if .sym file is not provided.\n");
 		return 1;
 }
-/*
-	if(i == 0) { 	// Support for .ORIG at the start of the program
-		printf(".ORIG x%04X\n", instruction);
-		free(numberData);
-		return;
-	} else {	// Support for memory indices before each instruction if not .ORIG instruction
-		printf("0x%04X: ", binData[0] + i - 1);
-	}
-*/
